@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Swarm Dashboard CLI Launcher
+# Compatible with macOS and Linux
+
+set -e
+
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+PORT="${PORT:-4820}"
+
+echo "Starting Swarm Dashboard on port ${PORT}..."
+export PORT="${PORT}"
+exec node "${DIR}/sidecars/swarm_board/main.mjs"

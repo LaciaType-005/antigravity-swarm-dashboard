@@ -1,0 +1,7 @@
+{
+  "name": "swarm-dashboard",
+  "displayName": "Swarm Command Center",
+  "description": "Standalone real-time Web dashboard for multi-agent Swarms, supporting macOS and Linux.",
+  "version": "1.0.0",
+  "author": "Antigravity Swarm Team"
+}
