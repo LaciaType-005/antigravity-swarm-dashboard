@@ -6,7 +6,75 @@ set -e
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PORT="${PORT:-4820}"
+OPEN_BROWSER=false
 
-echo "Starting Swarm Dashboard on port ${PORT}..."
+for arg in "$@"; do
+  if [ "$arg" = "--open" ] || [ "$arg" = "-o" ]; then
+    OPEN_BROWSER=true
+  fi
+done
+
+# 自动扫描最新的 Swarm 会话 ID
+NEWEST_CONV=$(node -e '
+const { existsSync, readdirSync, statSync } = require("node:fs");
+const { homedir } = require("node:os");
+const { join } = require("node:path");
+
+const candidates = [
+  process.env.ANTIGRAVITY_APP_DATA_DIR,
+  join(homedir(), ".gemini", "antigravity"),
+  join(homedir(), ".gemini", "antigravity-cli"),
+  join(homedir(), ".config", "antigravity"),
+].filter(Boolean);
+
+let newestId = "";
+let newestTime = 0;
+
+for (const appDir of candidates) {
+  const brain = join(appDir, "brain");
+  if (!existsSync(brain)) continue;
+  try {
+    for (const id of readdirSync(brain)) {
+      const board = join(brain, id, ".system_generated", "swarm", "board.jsonl");
+      if (existsSync(board)) {
+        const mtime = statSync(board).mtimeMs;
+        if (mtime > newestTime) {
+          newestTime = mtime;
+          newestId = id;
+        }
+      }
+    }
+  } catch (e) {}
+}
+console.log(newestId);
+' 2>/dev/null || true)
+
+echo "════════════════════════════════════════════════════════════════"
+echo "🚀 Swarm Command Center (Swarm 看板服务)"
+echo "════════════════════════════════════════════════════════════════"
+if [ -n "$NEWEST_CONV" ]; then
+  echo "🎯 自动检测到最新活跃 Swarm 会话:"
+  echo "   $NEWEST_CONV"
+  echo ""
+  echo "🌐 访问链接 (可直接点击在浏览器中打开):"
+  echo "   👉 http://127.0.0.1:${PORT}/?conversationId=${NEWEST_CONV}"
+  echo "   👉 直达 Graph 拓扑图: http://127.0.0.1:${PORT}/?conversationId=${NEWEST_CONV}&tab=graph"
+  echo "   👉 零参数自适应地址: http://127.0.0.1:${PORT}/"
+  
+  if [ "$OPEN_BROWSER" = true ]; then
+    URL="http://127.0.0.1:${PORT}/?conversationId=${NEWEST_CONV}"
+    if command -v open >/dev/null 2>&1; then
+      (sleep 1 && open "$URL") &
+    elif command -v xdg-open >/dev/null 2>&1; then
+      (sleep 1 && xdg-open "$URL") &
+    fi
+  fi
+else
+  echo "ℹ️  当前未探测到历史 Swarm 数据，启动后将自动监听新任务。"
+  echo "🌐 默认访问地址: http://127.0.0.1:${PORT}/"
+fi
+echo "════════════════════════════════════════════════════════════════"
+echo ""
+
 export PORT="${PORT}"
 exec node "${DIR}/sidecars/swarm_board/main.mjs"

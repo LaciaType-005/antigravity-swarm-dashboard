@@ -1389,12 +1389,28 @@ app.api('/api/frame', (data) => {
   }
 }, 'GET');
 
+function findNewestSwarm() {
+  let newestConv = null;
+  let newestMtime = 0;
+  for (const { appData, id } of listSwarmDirs()) {
+    const s = statOf(join(swarmDir(appData, id), 'board.jsonl'));
+    if (s.mtime > newestMtime) {
+      newestMtime = s.mtime;
+      newestConv = id;
+    }
+  }
+  return newestConv;
+}
+
 // The only data route: the swarm of one conversation (the pane's own unless
 // ?conversationId= overrides it, for standalone use). Resolving on every poll
 // is what makes a swarm started after the pane opened show up by itself.
 app.api('/api/swarm', (data) => {
-  const conv = data.conversationId || app.config.conversationId || '';
-  if (!conv || !ID_RE.test(conv)) return { conversationId: conv || null, swarm: null, member: null };
+  let conv = data.conversationId || app.config.conversationId || '';
+  if (!conv || !ID_RE.test(conv)) {
+    conv = findNewestSwarm();
+    if (!conv) return { conversationId: null, swarm: null, member: null };
+  }
   const { appData, swarm, member, remote } = resolve(conv);
   if (!swarm) return { conversationId: conv, swarm: null, member: null };
   const snap = remote ? remoteSnapshot(appData, swarm, remote) : snapshot(appData, swarm);
