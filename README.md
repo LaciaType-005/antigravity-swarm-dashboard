@@ -46,7 +46,7 @@
 将仓库克隆到当前用户机器的全局插件目录下：
 
 ```bash
-git clone <本仓库URL> ~/.gemini/config/plugins/swarm-dashboard
+git clone https://github.com/LaciaType-005/antigravity-swarm-dashboard.git ~/.gemini/config/plugins/swarm-dashboard
 ```
 
 克隆完成后，这台机器上的所有 Antigravity 项目与会话均可自动识别并使用该插件。
@@ -59,7 +59,7 @@ git clone <本仓库URL> ~/.gemini/config/plugins/swarm-dashboard
 
 ```bash
 mkdir -p .agents/plugins/
-git clone <本仓库URL> .agents/plugins/swarm-dashboard
+git clone https://github.com/LaciaType-005/antigravity-swarm-dashboard.git .agents/plugins/swarm-dashboard
 ```
 
 提交至团队 Git 仓库后，其他成员拉取项目即可自动加载，无需额外安装。
